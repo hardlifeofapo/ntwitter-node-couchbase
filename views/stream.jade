@@ -3,7 +3,6 @@ extends layout
 block scripts
   script(src="/socket.io/socket.io.js")
   script
-    console.info("lalalal");
     var socket = io.connect();
     var where;
     // Prepare events
@@ -46,10 +45,12 @@ block content
       .container
         a.brand(href="/")= title
         ul.nav
-          li
-            a(href="/") Home
           li.active
+            a(href="/") Home
+          li
             a(href="/stream") Stream
+          li
+            a(href="/stats") Stats
   .container
     .hero-unit
       h1 Stream

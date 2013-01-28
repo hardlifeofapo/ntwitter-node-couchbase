@@ -8,7 +8,7 @@
     , "jade": "*"
     , "ntwitter": "*"
     , "baseview": "*"
-    , "memcache": "*"
+    , "couchbase": "*"
     , "http": "*"
     , "socket.io": "*"
   }

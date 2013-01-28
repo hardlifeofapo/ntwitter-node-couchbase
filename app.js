@@ -6,9 +6,7 @@
 var express = require('express')
   , path = require('path')
   , twitter = require('ntwitter')
-  , baseview = require('baseview')({url: 'http://localhost:8092', bucket: 'default'})
-  , memcache = require('memcache')
-  , client = new memcache.Client(11211, 'localhost')
+  , cb = require("couchbase")
   , app = express()
   , io = require('socket.io')
   , server = require('http').createServer(app)
@@ -16,9 +14,8 @@ var express = require('express')
   //, RedisDB = require('redis')
   //, redis = RedisDB.createClient(6379, 'localhost');
   , routes = require('./routes')
-  , user = require('./routes/user')
   , tweets = require('./routes/tweets')
-  , keys = require('./keys')
+  , common = require('./keys')
   , global_socket, global_stream;
 
 
@@ -41,15 +38,15 @@ app.configure('development', function(){
 
 // Routes
 app.get('/', routes.index);
-app.get('/user', user.list);
 app.get('/stream', tweets.stream);
+app.get('/stats', tweets.stats);
 
 
 var twit = new twitter({
-  consumer_key: keys.consumer_key,
-  consumer_secret: keys.consumer_secret,
-  access_token_key: keys.access_token_key,
-  access_token_secret: keys.access_token_secret 
+  consumer_key: common.consumer_key,
+  consumer_secret: common.consumer_secret,
+  access_token_key: common.access_token_key,
+  access_token_secret: common.access_token_secret 
 });
 
 
@@ -58,17 +55,20 @@ function emitTweet(data){
 }
 
 function saveIntoCouchbase(aTweet, callback){
-  callback(aTweet);
-  
-  /*
-  memcache.connect();
-  memcache.set(aTweet.id, JSON.stringify(this), function(error, result){
-    memcache.close();
-    if(!error){
-      callback(aTweet);
+  cb.connect(common.config, function( err, cb ){
+    if( err ) {
+      console.info("16");
+      console.error(err);
+    }else{
+      myKey = aTweet.id_str;
+      cb.set(myKey, JSON.stringify(aTweet), function (err, meta) {
+        if(!err){
+          callback(aTweet);
+        }
+      });
     }
   });
-  */
+
 }
 
 
