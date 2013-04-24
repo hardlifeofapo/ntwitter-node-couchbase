@@ -1,4 +1,4 @@
-var baseview = require('baseview')({url: 'http://localhost:8092', bucket: 'Tweets'});
+var baseview = require('baseview')({url: 'http://localhost:8092', bucket: 'tweets'});
 /*
  * GET twitter stream.
  */
