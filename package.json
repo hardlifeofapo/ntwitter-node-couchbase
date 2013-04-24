@@ -9,7 +9,6 @@
     , "ntwitter": "*"
     , "baseview": "*"
     , "couchbase": "*"
-    , "http": "*"
     , "socket.io": "*"
   }
 }

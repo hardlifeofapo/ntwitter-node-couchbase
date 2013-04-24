@@ -16,7 +16,7 @@ var express = require('express')
   , routes = require('./routes')
   , tweets = require('./routes/tweets')
   , common = require('./keys')
-  , global_socket, global_stream;
+  , global_socket, global_stream, global_cb;
 
 
 app.configure(function(){
@@ -42,11 +42,20 @@ app.get('/stream', tweets.stream);
 app.get('/stats', tweets.stats);
 
 
+cb.connect(common.config, function( err, cb ){
+	if( err ) {
+    console.info("16");
+    console.error(err);
+  }else{
+		global_cb = cb;
+	}
+});
+
 var twit = new twitter({
-  consumer_key: common.consumer_key,
-  consumer_secret: common.consumer_secret,
-  access_token_key: common.access_token_key,
-  access_token_secret: common.access_token_secret 
+  consumer_key: common.keys.consumer_key,
+  consumer_secret: common.keys.consumer_secret,
+  access_token_key: common.keys.access_token_key,
+  access_token_secret: common.keys.access_token_secret 
 });
 
 
@@ -55,19 +64,13 @@ function emitTweet(data){
 }
 
 function saveIntoCouchbase(aTweet, callback){
-  cb.connect(common.config, function( err, cb ){
-    if( err ) {
-      console.info("16");
-      console.error(err);
-    }else{
-      myKey = aTweet.id_str;
-      cb.set(myKey, JSON.stringify(aTweet), function (err, meta) {
-        if(!err){
-          callback(aTweet);
-        }
-      });
-    }
-  });
+
+	myKey = aTweet.id_str;
+	global_cb.set(myKey, JSON.stringify(aTweet), function (err, meta) {
+		if(!err){
+			callback(aTweet);
+		}
+	});
 
 }
 
@@ -79,11 +82,16 @@ io.sockets.on('connection', function (socket) {
   // Set up events on socket
   // Start
   global_socket.on('start', function(socket) {
-    twit.stream('statuses/filter', {"track": "barcelona"},  function(stream) {
+    twit.stream('statuses/sample', {"language": "es"},  function(stream) {
       global_stream = stream;
-      stream.on('data', function (data) {
+      stream.on('error', function(a,b){
+				console.error(a);
+				console.error(b);
+			});
+			stream.on('data', function (data) {
         saveIntoCouchbase(data, emitTweet);
       });
+			
     });
   });
 
